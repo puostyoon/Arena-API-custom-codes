@@ -1,6 +1,8 @@
+import time 
+import os
 import cv2
 
-def show_split_color_image(npndarray, fps=None):
+def show_split_color_image(npndarray, savedir, fps=None):
     # R, G, B 채널 분리
     r, g, b = cv2.split(npndarray)  # shape: (H, W) 각각
 
@@ -17,6 +19,18 @@ def show_split_color_image(npndarray, fps=None):
     cv2.imshow('Red Channel', r)
     cv2.imshow('Green Channel', g)
     cv2.imshow('Blue Channel', b)
+
+	# ----- 3. 키 입력 감지 -----
+    key = cv2.waitKey(1) & 0xFF  # 1ms 대기 (있어야 프레임이 계속 넘어감)
+    if key == ord('s'):
+        timestamp = time.strftime('%Y%m%d_%H%M%S')
+        cv2.imwrite(os.path.join(savedir, f'original_{timestamp}.png'), npndarray)
+        cv2.imwrite(os.path.join(savedir, f'red_{timestamp}.png'), r)
+        cv2.imwrite(os.path.join(savedir, f'green_{timestamp}.png'), g)
+        cv2.imwrite(os.path.join(savedir, f'blue_{timestamp}.png'), b)
+        print(f"✅ Saved images at {timestamp}")
+    elif key == 27: # ESC key
+        return
     
 def set_maximum_exposure(device, fps):
 	

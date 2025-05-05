@@ -82,7 +82,7 @@ def create_devices_with_tries():
 		raise Exception(f'{TAB1}No device found! Please connect a device and run '
 						f'the example again.')
 
-def example_entry_point():
+def stream_image():
     """
     demonstrates live stream
     (1) Start device stream
@@ -134,7 +134,7 @@ def example_entry_point():
             npndarray = np.ndarray(buffer=array, dtype=np.uint8, shape=(item.height, item.width, buffer_bytes_per_pixel))
             # my code start
             fps = str(1/(curr_frame_time - prev_frame_time)); 
-            show_split_color_image(npndarray, fps=fps)
+            show_split_color_image(npndarray, 'captured_images', fps=fps)
 			# my code end
 			
             """
@@ -161,5 +161,5 @@ def example_entry_point():
 if __name__ == '__main__':
 	print('\nWARNING:\nTHIS EXAMPLE MIGHT CHANGE THE DEVICE(S) SETTINGS!')
 	print('\nExample started\n')
-	example_entry_point()
+	stream_image()
 	print('\nExample finished successfully')
