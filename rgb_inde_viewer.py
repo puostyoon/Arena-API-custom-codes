@@ -31,22 +31,43 @@ Live Stream: Introduction
 TAB1 = "  "
 TAB2 = "    "
 
-def setup(device):
+def sensor_setup(nodes, mode):
+    """
+    Setup stream dimensions and stream nodemap
+        num_channels changes based on the PixelFormat
+        Mono 8 would has 1 channel, RGB8 has 3 channels
+    """
+    stream_packet_size_max = nodes['DeviceStreamChannelPacketSize'].max
+    nodes['DeviceStreamChannelPacketSize'].value = stream_packet_size_max
+    nodes['num_channels'] = 3 # this node is originally not in the nodemap.
+#mode='center_crop', 'binning', 'original'
+
+    if mode=='center_crop':
+        new_width = 800
+        new_height = 800
+        nodes['OffsetX'] = nodes['Width'].value//2 - new_width//2
+        nodes['OffsetY'] = nodes['Height'].value//2 - new_height//2
+        nodes['Width'].value = new_width 
+        nodes['Height'].value = new_height 
+        nodes['PixelFormat'].value = 'RGB8' #RGB8
+    elif mode=='binning':
+        nodes['PixelFormat'].value = 'RGB8' #RGB8
+        pass 
+    elif mode=='original':
+        nodes['PixelFormat'].value = 'RGB8' #RGB8
+    else:
+        raise NotImplementedError(f'mode {mode} is not implemented.')
+
+
+    return nodes
+
+def streaming_setup(device):
     """
     Setup stream dimensions and stream nodemap
         num_channels changes based on the PixelFormat
         Mono 8 would has 1 channel, RGB8 has 3 channels
 
     """
-    nodemap = device.nodemap
-    nodes = nodemap.get_node(['Width', 'Height', 'PixelFormat'])
-
-    nodes['Width'].value = 720 # 720
-    nodes['Height'].value = 540 # 540
-    nodes['PixelFormat'].value = 'RGB8'
-
-    num_channels = 3
-
     # Stream nodemap
     tl_stream_nodemap = device.tl_stream_nodemap
 
@@ -54,33 +75,31 @@ def setup(device):
     tl_stream_nodemap['StreamAutoNegotiatePacketSize'].value = True
     tl_stream_nodemap['StreamPacketResendEnable'].value = True
 
-    return num_channels
-
 def create_devices_with_tries():
-	'''
-	Waits for the user to connect a device
-		before raising an exception if it fails
-	'''
-	tries = 0
-	tries_max = 6
-	sleep_time_secs = 10
-	devices = None
-	while tries < tries_max:
-		devices = system.create_device()
-		if not devices:
-			print(
-				f'{TAB1}Try {tries+1} of {tries_max}: waiting for {sleep_time_secs} '
-				f'secs for a device to be connected!')
-			for sec_count in range(sleep_time_secs):
-				time.sleep(1)
-				print(f'{TAB1}{sec_count + 1 } seconds passed ',
-					'.' * sec_count, end='\r')
-			tries += 1
-		else:
-			return devices
-	else:
-		raise Exception(f'{TAB1}No device found! Please connect a device and run '
-						f'the example again.')
+    '''
+    Waits for the user to connect a device
+        before raising an exception if it fails
+    '''
+    tries = 0
+    tries_max = 6
+    sleep_time_secs = 10
+    devices = None
+    while tries < tries_max:
+        devices = system.create_device()
+        if not devices:
+            print(
+                f'{TAB1}Try {tries+1} of {tries_max}: waiting for {sleep_time_secs} '
+                f'secs for a device to be connected!')
+            for sec_count in range(sleep_time_secs):
+                time.sleep(1)
+                print(f'{TAB1}{sec_count + 1 } seconds passed ',
+                    '.' * sec_count, end='\r')
+            tries += 1
+        else:
+            return devices
+    else:
+        raise Exception(f'{TAB1}No device found! Please connect a device and run '
+                        f'the example again.')
 
 def stream_image():
     """
@@ -97,18 +116,20 @@ def stream_image():
 
     devices = create_devices_with_tries()
     device = system.select_device(devices)
+    nodemap = device.nodemap
+    nodes = nodemap.get_node(['OffsetY', 'OffsetX', 'Width', 'Height', 'PixelFormat', 'DeviceStreamChannelPacketSize'])
+    initial_nodes = copy_nodemap_values(nodes)
 
     # Setup
-    num_channels = setup(device)
+    streaming_setup(device)
+    nodes = sensor_setup(nodes, mode='center_crop') # mode='center_crop', 'binning', 'original'. new key 'num_channels' will be added.
+    
+    set_maximum_exposure(device, fps=10.5)
 
+    # Start streaming
     curr_frame_time = 0
     prev_frame_time = 0
-	
-    # my code start
-    set_maximum_exposure(device, fps=10.0)
-	# my code end
-
-    with device.start_stream():
+    with device.start_stream(100):
         """
         Infinitely fetch and display buffer data until esc is pressed
         """
@@ -127,7 +148,7 @@ def stream_image():
             """
             Buffer data as cpointers can be accessed using buffer.pbytes
             """
-            array = (ctypes.c_ubyte * num_channels * item.width * item.height).from_address(ctypes.addressof(item.pbytes))
+            array = (ctypes.c_ubyte * nodes['num_channels'] * item.width * item.height).from_address(ctypes.addressof(item.pbytes))
             """
             Create a reshaped NumPy array to display using OpenCV
             """
@@ -135,8 +156,8 @@ def stream_image():
             # my code start
             fps = str(1/(curr_frame_time - prev_frame_time)); 
             show_split_color_image(npndarray, 'captured_images', fps=fps)
-			# my code end
-			
+            # my code end
+            
             """
             Destroy the copied item to prevent memory leaks
             """
@@ -150,16 +171,16 @@ def stream_image():
             key = cv2.waitKey(1)
             if key == 27:
                 break
-            
+        return_original_node_values(nodes, initial_nodes)
         device.stop_stream()
         cv2.destroyAllWindows()
-		
+ 
     system.destroy_device()
-	
+    
     print(f'{TAB1}Destroyed all created devices')
 
 if __name__ == '__main__':
-	print('\nWARNING:\nTHIS EXAMPLE MIGHT CHANGE THE DEVICE(S) SETTINGS!')
-	print('\nExample started\n')
-	stream_image()
-	print('\nExample finished successfully')
+    print('\nWARNING:\nTHIS EXAMPLE MIGHT CHANGE THE DEVICE(S) SETTINGS!')
+    print('\nStreaming started\n')
+    stream_image()
+    print('\nstreaming finished successfully')
