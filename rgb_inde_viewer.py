@@ -43,8 +43,8 @@ def sensor_setup(nodes, mode):
 #mode='center_crop', 'binning', 'original'
 
     if mode=='crop':
-        new_width = 400
-        new_height = 400
+        new_width = 1000
+        new_height = 1000
         nodes['Width'].value = new_width 
         nodes['Height'].value = new_height 
         nodes['PixelFormat'].value = 'RGB8' #RGB8
