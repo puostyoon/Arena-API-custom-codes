@@ -1,6 +1,18 @@
 import time 
 import os
 import cv2
+import numpy as np
+import matplotlib.pyplot as plt 
+
+def copy_nodemap_values(nodes):
+    copied_nodes = dict()
+    for key, val in nodes.items():
+        copied_nodes[key]=val 
+    return copied_nodes
+
+def return_original_node_values(nodes, initial_nodes):
+    for key, val in initial_nodes.items():
+        nodes[key]=val 
 
 def show_split_color_image(npndarray, savedir, fps=None):
     # R, G, B 채널 분리
@@ -20,7 +32,7 @@ def show_split_color_image(npndarray, savedir, fps=None):
     cv2.imshow('Green Channel', g)
     cv2.imshow('Blue Channel', b)
 
-	# ----- 3. 키 입력 감지 -----
+    # ----- 3. 키 입력 감지 -----
     key = cv2.waitKey(1) & 0xFF  # 1ms 대기 (있어야 프레임이 계속 넘어감)
     if key == ord('s'):
         timestamp = time.strftime('%Y%m%d_%H%M%S')
@@ -33,24 +45,25 @@ def show_split_color_image(npndarray, savedir, fps=None):
         return
     
 def set_maximum_exposure(device, fps):
-	
-	nodemap = device.nodemap
-	nodes = nodemap.get_node(['ExposureAuto', 'ExposureTime',
-						'AcquisitionFrameRateEnable',
-						'AcquisitionFrameRate'])
-	nodes['AcquisitionFrameRateEnable'].value = True
-	# nodes['AcquisitionFrameRate'].value = nodes['AcquisitionFrameRate'].min
-	nodes['AcquisitionFrameRate'].value = float(fps)
-	nodes['ExposureAuto'].value = 'Off'
-	print("Disable Auto Exposure")
+    
+    nodemap = device.nodemap
+    nodes = nodemap.get_node(['ExposureAuto', 'ExposureTime',
+                        'AcquisitionFrameRateEnable',
+                        'AcquisitionFrameRate'])
+    nodes['AcquisitionFrameRateEnable'].value = True
+    # nodes['AcquisitionFrameRate'].value = nodes['AcquisitionFrameRate'].min
 
-	if nodes['ExposureTime'] is None:
-		raise Exception("ExposureTime node not found")
-	if nodes['ExposureTime'].is_writable is False:
-		raise Exception("ExposureTime node is not writable")
+    nodes['AcquisitionFrameRate'].value = float(fps)
+    nodes['ExposureAuto'].value = 'Off'
+    print("Disable Auto Exposure")
 
-	print(f"Acquisition frame rate: {nodes['AcquisitionFrameRate']}")
+    if nodes['ExposureTime'] is None:
+        raise Exception("ExposureTime node not found")
+    if nodes['ExposureTime'].is_writable is False:
+        raise Exception("ExposureTime node is not writable")
 
-	nodes['ExposureTime'].value = nodes['ExposureTime'].max
-	
-	print(f"Exposure time: {nodes['ExposureTime'].value}")
+    print(f"Acquisition frame rate: {nodes['AcquisitionFrameRate']}")
+
+    nodes['ExposureTime'].value = nodes['ExposureTime'].max
+    
+    print(f"Exposure time: {nodes['ExposureTime'].value}")
