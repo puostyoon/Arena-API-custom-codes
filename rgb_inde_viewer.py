@@ -42,11 +42,9 @@ def sensor_setup(nodes, mode):
     nodes['num_channels'] = 3 # this node is originally not in the nodemap.
 #mode='center_crop', 'binning', 'original'
 
-    if mode=='center_crop':
-        new_width = 800
-        new_height = 800
-        nodes['OffsetX'] = nodes['Width'].value//2 - new_width//2
-        nodes['OffsetY'] = nodes['Height'].value//2 - new_height//2
+    if mode=='crop':
+        new_width = 400
+        new_height = 400
         nodes['Width'].value = new_width 
         nodes['Height'].value = new_height 
         nodes['PixelFormat'].value = 'RGB8' #RGB8
@@ -117,14 +115,14 @@ def stream_image():
     devices = create_devices_with_tries()
     device = system.select_device(devices)
     nodemap = device.nodemap
-    nodes = nodemap.get_node(['OffsetY', 'OffsetX', 'Width', 'Height', 'PixelFormat', 'DeviceStreamChannelPacketSize'])
+    nodes = nodemap.get_node(['Width', 'Height', 'PixelFormat', 'DeviceStreamChannelPacketSize'])
     initial_nodes = copy_nodemap_values(nodes)
 
     # Setup
     streaming_setup(device)
-    nodes = sensor_setup(nodes, mode='center_crop') # mode='center_crop', 'binning', 'original'. new key 'num_channels' will be added.
+    nodes = sensor_setup(nodes, mode='crop') # mode='crop', 'binning', 'original'. new key 'num_channels' will be added.
     
-    set_maximum_exposure(device, fps=10.5)
+    set_maximum_exposure(device, fps=2.5)
 
     # Start streaming
     curr_frame_time = 0
