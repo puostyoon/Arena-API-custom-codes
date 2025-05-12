@@ -20,6 +20,8 @@ import numpy as np
 import cv2
 import time
 
+from tqdm import trange
+
 '''
 Live Stream: Introduction
     This example introduces the basics of running a live stream 
@@ -129,7 +131,7 @@ def stream_image():
         """
         Infinitely fetch and display buffer data until esc is pressed
         """
-        for i in range(2000):
+        for i in trange(2000):
             # Used to display FPS on stream
             curr_frame_time = time.time()
 
