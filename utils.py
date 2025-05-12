@@ -19,27 +19,29 @@ def show_split_color_image(npndarray, savedir, fps=None):
     r, g, b = cv2.split(npndarray)  # shape: (H, W) 각각
 
     # 채널 문자 삽입
-    cv2.putText(r, 'R', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 3, cv2.LINE_AA)
-    cv2.putText(g, 'G', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3, cv2.LINE_AA)
-    cv2.putText(b, 'B', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 3, cv2.LINE_AA)
+    cv2.putText(r, 'R', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(g, 'G', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(b, 'B', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3, cv2.LINE_AA)
 
     # 원래 영상에도 FPS 텍스트 추가
     cv2.putText(npndarray, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 3, (100, 255, 0), 3, cv2.LINE_AA)
 
     # 창으로 띄우기
     cv2.imshow('Original (BGR)', cv2.cvtColor(npndarray, cv2.COLOR_BGR2RGB))
-    cv2.imshow('Red Channel', r)
-    cv2.imshow('Green Channel', g)
-    cv2.imshow('Blue Channel', b)
+    # cv2.imshow('Red Channel', r)
+    # cv2.imshow('Green Channel', g)
+    # cv2.imshow('Blue Channel', b)
+    cv2.imshow('r g b', cv2.resize(np.concatenate([r,g,b], axis=1), dsize=(1500, 500)))
 
     # ----- 3. 키 입력 감지 -----
     key = cv2.waitKey(1) & 0xFF  # 1ms 대기 (있어야 프레임이 계속 넘어감)
     if key == ord('s'):
         timestamp = time.strftime('%Y%m%d_%H%M%S')
-        cv2.imwrite(os.path.join(savedir, f'original_{timestamp}.png'), npndarray)
+        cv2.imwrite(os.path.join(savedir, f'original_{timestamp}.png'), cv2.cvtColor(npndarray, cv2.COLOR_BGR2RGB))
         cv2.imwrite(os.path.join(savedir, f'red_{timestamp}.png'), r)
         cv2.imwrite(os.path.join(savedir, f'green_{timestamp}.png'), g)
         cv2.imwrite(os.path.join(savedir, f'blue_{timestamp}.png'), b)
+        cv2.imwrite(os.path.join(savedir, f'rgb_separate_{timestamp}.png'), np.concatenate([r,g,b], axis=1))
         print(f"✅ Saved images at {timestamp}")
     elif key == 27: # ESC key
         return
@@ -49,12 +51,14 @@ def set_maximum_exposure(device, fps):
     nodemap = device.nodemap
     nodes = nodemap.get_node(['ExposureAuto', 'ExposureTime',
                         'AcquisitionFrameRateEnable',
-                        'AcquisitionFrameRate'])
+                        'AcquisitionFrameRate',
+                        'BalanceWhiteAuto'])
     nodes['AcquisitionFrameRateEnable'].value = True
     # nodes['AcquisitionFrameRate'].value = nodes['AcquisitionFrameRate'].min
 
     nodes['AcquisitionFrameRate'].value = float(fps)
     nodes['ExposureAuto'].value = 'Off'
+    # nodes['BalanceWhiteAuto'].value = 'Off'
     print("Disable Auto Exposure")
 
     if nodes['ExposureTime'] is None:

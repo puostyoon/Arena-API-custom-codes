@@ -43,8 +43,8 @@ def sensor_setup(nodes, mode):
 #mode='center_crop', 'binning', 'original'
 
     if mode=='crop':
-        new_width = 400
-        new_height = 400
+        new_width = 1000
+        new_height = 1000
         nodes['Width'].value = new_width 
         nodes['Height'].value = new_height 
         nodes['PixelFormat'].value = 'RGB8' #RGB8
@@ -122,7 +122,7 @@ def stream_image():
     streaming_setup(device)
     nodes = sensor_setup(nodes, mode='crop') # mode='crop', 'binning', 'original'. new key 'num_channels' will be added.
     
-    set_maximum_exposure(device, fps=2.5)
+    set_maximum_exposure(device, fps=1.8)
 
     # Start streaming
     curr_frame_time = 0
