@@ -19,9 +19,9 @@ def show_split_color_image(npndarray, savedir, fps=None):
     r, g, b = cv2.split(npndarray)  # shape: (H, W) 각각
 
     # 채널 문자 삽입
-    cv2.putText(r, 'R', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 3, cv2.LINE_AA)
-    cv2.putText(g, 'G', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3, cv2.LINE_AA)
-    cv2.putText(b, 'B', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 0), 3, cv2.LINE_AA)
+    cv2.putText(r, 'R', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(g, 'G', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(b, 'B', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3, cv2.LINE_AA)
 
     # 원래 영상에도 FPS 텍스트 추가
     cv2.putText(npndarray, fps, (7, 70), cv2.FONT_HERSHEY_SIMPLEX, 3, (100, 255, 0), 3, cv2.LINE_AA)
@@ -37,7 +37,7 @@ def show_split_color_image(npndarray, savedir, fps=None):
     key = cv2.waitKey(1) & 0xFF  # 1ms 대기 (있어야 프레임이 계속 넘어감)
     if key == ord('s'):
         timestamp = time.strftime('%Y%m%d_%H%M%S')
-        cv2.imwrite(os.path.join(savedir, f'original_{timestamp}.png'), npndarray)
+        cv2.imwrite(os.path.join(savedir, f'original_{timestamp}.png'), cv2.cvtColor(npndarray, cv2.COLOR_BGR2RGB))
         cv2.imwrite(os.path.join(savedir, f'red_{timestamp}.png'), r)
         cv2.imwrite(os.path.join(savedir, f'green_{timestamp}.png'), g)
         cv2.imwrite(os.path.join(savedir, f'blue_{timestamp}.png'), b)
@@ -58,7 +58,7 @@ def set_maximum_exposure(device, fps):
 
     nodes['AcquisitionFrameRate'].value = float(fps)
     nodes['ExposureAuto'].value = 'Off'
-    nodes['BalanceWhiteAuto'].value = 'Off'
+    # nodes['BalanceWhiteAuto'].value = 'Off'
     print("Disable Auto Exposure")
 
     if nodes['ExposureTime'] is None:

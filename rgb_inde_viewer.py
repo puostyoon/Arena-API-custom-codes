@@ -122,7 +122,7 @@ def stream_image():
     streaming_setup(device)
     nodes = sensor_setup(nodes, mode='crop') # mode='crop', 'binning', 'original'. new key 'num_channels' will be added.
     
-    set_maximum_exposure(device, fps=2.5)
+    set_maximum_exposure(device, fps=1.8)
 
     # Start streaming
     curr_frame_time = 0
